@@ -38,6 +38,89 @@ class Quadtree:
 
         pass
 
+    def _add_skip_cover(self, x: float, y: float, d: Union[dict, None] = None):
+        """
+        Add a data point into the quadtree without covering it first. This method
+        should only be called in add(), add_all_data() or add_all()
+
+        Args:
+            x(float): The x coordinate of the data point
+            y(float): The y coordinate of the data point
+            d(dict): The data entry associated with this data point. The default
+                value is {'x': x, 'y': y}.
+        """
+        pass
+
+        # Create a leaf node
+        if d:
+            leaf = {"data": d}
+        else:
+            leaf = {"data": {"x": x, "y": y}}
+
+        # There are three cases when adding a new point to a quadtree.
+        # (1) The tree is empty => use this new point as the root
+        # (2) Find the node this point should goes to => if there is no point
+        # in the slot => add this point
+        # (3) Find the node this point should goes to => if there is already a
+        # point => split the node repetitively until two points are separated
+        # => add this point
+
+        # Case (1)
+        if self.root is None:
+            self.root = leaf
+            return self
+
+        # Case (2) & (3)
+        # Find the node this data point belongs to (2D Binary search)
+        node = self.root
+        x0, y0, x1, y1 = self.x0, self.y0, self.x1, self.y1
+        parent = None
+        quad = None
+
+        while "data" not in node:
+            xm, ym = (x0 + x1) / 2, (y0 + y1) / 2
+            quad = get_quadrant(x, y, xm, ym)
+            # Quadrant index
+            # |2|3|
+            # |0|1|
+
+            if quad == 3:
+                x0, y0 = xm, ym
+
+            elif quad == 2:
+                x1, y0 = xm, ym
+
+            elif quad == 1:
+                x0, y1 = xm, ym
+
+            else:
+                x1, y1 = xm, ym
+
+            parent = node
+            node = parent[quad]
+
+            # Case (2): Empty slot to plug in this data point
+            if node is None:
+                parent[quad] = leaf
+                return self
+
+        # Case (3): The current `node` is a leaf node where the data point
+        # should go to. First check if the current `node` shares the exact x
+        # and y for the data point
+        x_old, y_old = node["data"]["x"], node["data"]["y"]
+
+        if x == x_old and y == y_old:
+            # Link these two points
+            leaf["next"] = node
+            if parent is None:
+                self.root = leaf
+            else:
+                parent[quad] = leaf
+            return self
+
+        # If two points are not exactly the same, we keep splitting the current
+        # node until two data points are separated in different quadrants
+
     def add_all_data(self, data: list[dict]):
         """
         Add all data points into the quadtree.
@@ -155,3 +238,33 @@ class Quadtree:
         self.x0, self.y0, self.x1, self.y1 = x0, y0, x1, y1
 
         return self
+
+
+def get_quadrant(x: float, y: float, xm: float, ym: float) -> int:
+    """
+    Get the quadrant index for (x, y). The quadrant order is defined by lower x
+    to larger x, and lower y to larger y.
+
+    |2|3|\n
+    |0|1|
+
+    Args:
+        x (float): The x coordinate of point (x, y)
+        y (float): The y coordinate of point (x, y)
+        xm (float): The x coordinate of the midpoint of a square
+        ym (float): The y coordinate of the midpoint of a square
+
+    Returns:
+        int: Quadrant index
+    """
+    if x >= xm and y >= xm:
+        return 3
+
+    elif x < xm and y >= xm:
+        return 2
+
+    elif x >= xm and y < xm:
+        return 1
+
+    else:
+        return 0
