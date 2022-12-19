@@ -36,7 +36,9 @@ class Quadtree:
                 value is {'x': x, 'y': y}.
         """
 
-        pass
+        # Make sure the new point is covered by the extent before adding it
+        self.cover(x, y)
+        self._add_skip_cover(x, y, d)
 
     def _add_skip_cover(self, x: float, y: float, d: Union[dict, None] = None):
         """
@@ -118,8 +120,28 @@ class Quadtree:
                 parent[quad] = leaf
             return self
 
-        # If two points are not exactly the same, we keep splitting the current
-        # node until two data points are separated in different quadrants
+        # If two points are not the same, we keep splitting the current node
+        # until two data points are separated in different quadrants
+        quad_new = quad
+        quad_old = quad
+
+        while quad_new == quad_old:
+            if parent is None:
+                self.root = [None for _ in range(4)]
+                parent = self.root
+            else:
+                parent[quad] = [None for _ in range(4)]
+                parent = parent[quad]
+
+            # Get the new quadrants for the new and old points
+            xm, ym = (x0 + x1) / 2, (y0 + y1) / 2
+            quad_new = get_quadrant(x, y, xm, ym)
+            quad_old = get_quadrant(x_old, y_old, xm, ym)
+
+        # Insert two nodes as leaves in two different quadrants
+        parent[quad_old] = node
+        parent[quad_new] = leaf
+        return self
 
     def add_all_data(self, data: list[dict]):
         """
