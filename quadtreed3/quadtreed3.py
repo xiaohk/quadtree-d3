@@ -39,6 +39,7 @@ class Quadtree:
         # Make sure the new point is covered by the extent before adding it
         self.cover(x, y)
         self._add_skip_cover(x, y, d)
+        return self
 
     def _add_skip_cover(self, x: float, y: float, d: Union[dict, None] = None):
         """
@@ -188,6 +189,7 @@ class Quadtree:
         else:
             self.cover(point0[0], point0[1])
             self.cover(point1[0], point1[1])
+            return self
 
     def cover(self, x: float, y: float):
         """
@@ -254,7 +256,8 @@ class Quadtree:
                     y1 = y0 + length
 
             # Update the root to point to the root node
-            self.root = node
+            if self.root is not None and "data" not in self.root:
+                self.root = node
 
         # Record the extent
         self.x0, self.y0, self.x1, self.y1 = x0, y0, x1, y1
