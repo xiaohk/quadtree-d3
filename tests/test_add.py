@@ -2,33 +2,7 @@
 
 """Tests for `quadtreed3` package."""
 
-import pytest
 from quadtreed3.quadtreed3 import Quadtree
-
-
-@pytest.fixture
-def quadtree():
-    quadtree = Quadtree()
-    return quadtree
-
-
-def same_leaves(x, y):
-    if "data" not in x or "data" not in y:
-        return False
-
-    for k in x:
-        if k not in y:
-            return False
-        elif y[k] != x[k]:
-            return False
-
-    for k in y:
-        if k not in x:
-            return False
-        elif x[k] != y[k]:
-            return False
-
-    return True
 
 
 def test_add_simple():
@@ -66,20 +40,20 @@ def test_add_simple():
 
 def test_add_perimeter():
     q = Quadtree()
-    q.add(0, 0).root == {"data": {"x": 0, "y": 0}}
-    q.add(1, 1).root == [
+    assert q.add(0, 0).root == {"data": {"x": 0, "y": 0}}
+    assert q.add(1, 1).root == [
         {"data": {"x": 0, "y": 0}},
         None,
         None,
         {"data": {"x": 1, "y": 1}},
     ]
-    q.add(1, 0).root == [
+    assert q.add(1, 0).root == [
         {"data": {"x": 0, "y": 0}},
         {"data": {"x": 1, "y": 0}},
         None,
         {"data": {"x": 1, "y": 1}},
     ]
-    q.add(0, 1).root == [
+    assert q.add(0, 1).root == [
         {"data": {"x": 0, "y": 0}},
         {"data": {"x": 1, "y": 0}},
         {"data": {"x": 0, "y": 1}},

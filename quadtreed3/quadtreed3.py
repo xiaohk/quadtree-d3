@@ -12,7 +12,6 @@ from typing import Union, Optional
 
 import numpy as np
 
-import time
 import math
 
 
@@ -52,7 +51,6 @@ class Quadtree:
             d(dict): The data entry associated with this data point. The default
                 value is {'x': x, 'y': y}.
         """
-        pass
 
         # Create a leaf node
         if d:
@@ -131,13 +129,25 @@ class Quadtree:
                 self.root = [None for _ in range(4)]
                 parent = self.root
             else:
-                parent[quad] = [None for _ in range(4)]
-                parent = parent[quad]
+                parent[quad_new] = [None for _ in range(4)]
+                parent = parent[quad_new]
 
             # Get the new quadrants for the new and old points
             xm, ym = (x0 + x1) / 2, (y0 + y1) / 2
             quad_new = get_quadrant(x, y, xm, ym)
             quad_old = get_quadrant(x_old, y_old, xm, ym)
+
+            if quad_new == 3:
+                x0, y0 = xm, ym
+
+            elif quad_new == 2:
+                x1, y0 = xm, ym
+
+            elif quad_new == 1:
+                x0, y1 = xm, ym
+
+            else:
+                x1, y1 = xm, ym
 
         # Insert two nodes as leaves in two different quadrants
         parent[quad_old] = node
@@ -152,7 +162,17 @@ class Quadtree:
             data(list[dict]): A list of data entries. Each data entry is a
                 dictionary with at least two keys 'x' and 'y'.
         """
-        pass
+
+        xs, ys = [], []
+        new_data = []
+
+        for d in data:
+            xs.append(d["x"])
+            ys.append(d["y"])
+            new_data.append(d)
+
+        self.add_all(xs, ys, new_data)
+        return self
 
     def add_all(
         self, xs: list[float], ys: list[float], data: Union[list[dict], None] = None
@@ -167,7 +187,21 @@ class Quadtree:
             data(list[dict]): A list of data entries. Each data entry is a
                 dictionary with at least two keys 'x' and 'y'.
         """
-        pass
+
+        # Initialize the extent by (min_x, min_y) and (max_x, max_y)
+        x0, y0, x1, y1 = np.min(xs), np.min(ys), np.max(xs), np.max(ys)
+
+        if x0 > x1 or y0 > y1:
+            return self
+
+        self.cover(x0, y0)
+        self.cover(x1, y1)
+
+        # Add new points one by one
+        for i, _ in enumerate(xs):
+            self.add(xs[i], ys[i], data[i] if data else None)
+
+        return self
 
     def extent(
         self, point0: list[float, float] = None, point1: list[float, float] = None
@@ -282,13 +316,13 @@ def get_quadrant(x: float, y: float, xm: float, ym: float) -> int:
     Returns:
         int: Quadrant index
     """
-    if x >= xm and y >= xm:
+    if x >= xm and y >= ym:
         return 3
 
-    elif x < xm and y >= xm:
+    elif x < xm and y >= ym:
         return 2
 
-    elif x >= xm and y < xm:
+    elif x >= xm and y < ym:
         return 1
 
     else:
