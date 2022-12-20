@@ -2,7 +2,7 @@
 
 """Tests for `quadtreed3` package."""
 
-from quadtreed3.quadtreed3 import Quadtree
+from quadtreed3 import Quadtree
 
 
 def test_add_simple():

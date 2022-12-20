@@ -3,13 +3,13 @@
 """Tests for `quadtreed3` package."""
 
 import pytest
-from quadtreed3.quadtreed3 import Quadtree
+from quadtreed3 import Quadtree
 
 
 @pytest.fixture
 def quadtree():
-    quadtree = Quadtree()
-    return quadtree
+    q = Quadtree()
+    return q
 
 
 def test_content_trivial(quadtree: Quadtree):
