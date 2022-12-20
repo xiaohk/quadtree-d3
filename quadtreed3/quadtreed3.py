@@ -293,6 +293,94 @@ class Quadtree:
 
         return self
 
+    def get_node_representation(self):
+        """
+        Create a copy of this Quadtree using a linked node data structure instead
+        of the basic array-based structure.
+        """
+
+        root = self.root
+
+        new_root = Node(
+            id=0,
+            level=0,
+            position=[self.x0, self.y0, self.x1, self.y1],
+        )
+
+        # Each item in the stack is (cur_node[old], parent[new], position_quad)
+        stack = [(root, None, None)]
+        stack_post = []
+        node_counter = 1
+
+        while len(stack) > 0:
+            cur_node, parent, cur_quad = stack.pop()
+
+            if cur_node is None:
+                # Empty child (position placeholder)
+                parent.children.append(None)
+                continue
+
+            # Create a new Node object
+            if parent is None:
+                # Root node
+                cur_new_node = new_root
+            else:
+                # Compute the position based on its quad and parent's position
+                # |2|3|
+                # |0|1|
+
+                x0, y0, x1, y1 = parent.position
+                xm, ym = (x0 + x1) / 2, (y0 + y1) / 2
+
+                if cur_quad == 0:
+                    cur_position = [x0, y0, xm, ym]
+                elif cur_quad == 1:
+                    cur_position = [xm, y0, x1, ym]
+                elif cur_quad == 2:
+                    cur_position = [x0, ym, xm, y1]
+                elif cur_quad == 3:
+                    cur_position = [xm, ym, x1, y1]
+                else:
+                    print("Unknown cur_quad: ", cur_quad)
+
+                cur_new_node = Node(
+                    id=node_counter, level=parent.level + 1, position=cur_position
+                )
+                node_counter += 1
+
+                # Add itself to its parent's children list
+                parent.children.append(cur_new_node)
+
+            # Leaf node
+            if "data" in cur_node:
+                cur_new_node.data.append(cur_node["data"])
+                cur_new_node.size = 1
+            else:
+                # The positions are shown below (computed in Cartesian coordinate)
+                # We need to push them reversely so that the next item in the stack
+                # is the first item in the children list
+                # |2|3|
+                # |0|1|
+                stack.append((cur_node[3], cur_new_node, 3))
+                stack.append((cur_node[2], cur_new_node, 2))
+                stack.append((cur_node[1], cur_new_node, 1))
+                stack.append((cur_node[0], cur_new_node, 0))
+
+                # Will visit this non-leaf node again to calculate its size
+                stack_post.append(cur_new_node)
+
+        # Second visit to calculate subtree sizes
+        while len(stack_post) > 0:
+            cur_node = stack_post.pop()
+            max_c_height = 0
+            for c in cur_node.children:
+                if c is not None:
+                    max_c_height = max(max_c_height, c.height)
+                    cur_node.size += c.size
+            cur_node.height = max_c_height + 1
+
+        return new_root
+
 
 def get_quadrant(x: float, y: float, xm: float, ym: float) -> int:
     """
@@ -322,3 +410,35 @@ def get_quadrant(x: float, y: float, xm: float, ym: float) -> int:
 
     else:
         return 0
+
+
+class Node:
+    """
+    An object-based representation of a Quadtree.
+    """
+
+    def __init__(self, id: int, level: int, position: list[int]):
+        self.children: list[Node] = []
+        self.size = 0
+        self.height = 0
+        self.level = level
+        self.data = []
+        self.id = id
+        # A list of 4 items: [x0, y0, x1, y1]
+        self.position = position
+
+    def __str__(self):
+        children_num = len([c for c in self.children if c is not None])
+
+        data_string = f"{self.data}"
+        if len(self.data) > 1:
+            data_string = f"[{self.data[0]}...]"
+
+        return (
+            f"Node(children={children_num}, size={self.size}, "
+            + f"height={self.height}, level={self.level}, data={data_string}, "
+            + f"id={self.id})"
+        )
+
+    def __repr__(self):
+        return self.__str__()
