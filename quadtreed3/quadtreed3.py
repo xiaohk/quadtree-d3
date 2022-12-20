@@ -1,14 +1,9 @@
 """Main module."""
 
-
-from glob import glob
-from os.path import exists, join, basename
 from tqdm import tqdm
-from json import load, dump, JSONEncoder, dumps
+from json import load, dump
 
-from collections import Counter
-from copy import deepcopy
-from typing import Union, Optional
+from typing import Union
 
 import numpy as np
 
@@ -198,7 +193,7 @@ class Quadtree:
         self.cover(x1, y1)
 
         # Add new points one by one
-        for i, _ in enumerate(xs):
+        for i, _ in tqdm(enumerate(xs)):
             self.add(xs[i], ys[i], data[i] if data else None)
 
         return self
