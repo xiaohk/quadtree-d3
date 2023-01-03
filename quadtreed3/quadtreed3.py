@@ -302,7 +302,7 @@ class Quadtree:
         root = self.root
 
         new_root = Node(
-            id=0,
+            nid=0,
             level=0,
             position=[self.x0, self.y0, self.x1, self.y1],
         )
@@ -344,7 +344,7 @@ class Quadtree:
                     print("Unknown cur_quad: ", cur_quad)
 
                 cur_new_node = Node(
-                    id=node_counter, level=parent.level + 1, position=cur_position
+                    nid=node_counter, level=parent.level + 1, position=cur_position
                 )
                 node_counter += 1
 
@@ -417,13 +417,13 @@ class Node:
     An object-based representation of a Quadtree.
     """
 
-    def __init__(self, id: int, level: int, position: list[int]):
+    def __init__(self, nid: int, level: int, position: list[int]):
         self.children: list[Node] = []
         self.size = 0
         self.height = 0
         self.level = level
         self.data = []
-        self.id = id
+        self.nid = nid
         # A list of 4 items: [x0, y0, x1, y1]
         self.position = position
 
@@ -437,7 +437,7 @@ class Node:
         return (
             f"Node(children={children_num}, size={self.size}, "
             + f"height={self.height}, level={self.level}, data={data_string}, "
-            + f"id={self.id})"
+            + f"id={self.nid})"
         )
 
     def __repr__(self):
